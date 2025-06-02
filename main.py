@@ -180,7 +180,7 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await message.reply_text("⛔ چت ناشناس فعالی ندارید.")
 
 if __name__ == '__main__':
-    keep_alive()  # فعال‌سازی سرور UptimeRobot
+   
 
     app = ApplicationBuilder().token(TOKEN).build()
 
