@@ -90,7 +90,8 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "getlink":
         await query.message.reply_text(
-            f"📎 لینک ناشناس شما:\nhttps://t.me/{context.bot.username}?start={user_id}"
+            f"📎 لینک ناشناس شما:\nhttps://t.me/{context.bot.username}?start={user_id}",
+                disable_web_page_preview=True
         )
 
     elif data.startswith("sendto_"):
