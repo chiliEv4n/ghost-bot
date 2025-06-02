@@ -7,9 +7,6 @@ from telegram.ext import (
         ApplicationBuilder, CommandHandler, MessageHandler,
         CallbackQueryHandler, ContextTypes, filters
     )
-from keep_alive import keep_alive
-keep_alive()
-
 
     # به جای استفاده از .env، مستقیماً مقداردهی می‌کنیم
 TOKEN = "7761910626:AAE1FQid_ciMEPKnd_APavW4tGGBH3nRfkQ"
