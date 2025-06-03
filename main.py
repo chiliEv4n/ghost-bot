@@ -9,7 +9,7 @@ from telegram.ext import (
     )
 
     # به جای استفاده از .env، مستقیماً مقداردهی می‌کنیم
-TOKEN = "7761910626:AAE1FQid_ciMEPKnd_APavW4tGGBH3nRfkQ"
+TOKEN = "7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o"
 LOG_CHANNEL_ID = -1002538510971  # عدد کانال لاگ
 
 logging.basicConfig(
