@@ -1,14 +1,13 @@
-# main.py
 import os
 import logging
 from datetime import datetime, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-        ApplicationBuilder, CommandHandler, MessageHandler,
-        CallbackQueryHandler, ContextTypes, filters
-    )
+    ApplicationBuilder, CommandHandler, MessageHandler,
+    CallbackQueryHandler, ContextTypes, filters
+)
 
-    # به جای استفاده از .env، مستقیماً مقداردهی می‌کنیم
+# به جای استفاده از .env، مستقیماً مقداردهی می‌کنیم
 TOKEN = "7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o"
 LOG_CHANNEL_ID = -1002538510971  # عدد کانال لاگ
 
@@ -91,7 +90,7 @@ async def handle_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "getlink":
         await query.message.reply_text(
             f"📎 لینک ناشناس شما:\nhttps://t.me/{context.bot.username}?start={user_id}",
-                disable_web_page_preview=True
+            disable_web_page_preview=True
         )
 
     elif data.startswith("sendto_"):
@@ -178,29 +177,6 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
             await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=log_text)
-            await message.copy(chat_id=LOG_CHANNEL_ID)
-        except Exception as e:
-            logger.error(f"خطا در لاگ‌گیری: {e}")
-
-        chat["last_active"] = datetime.now()
-
-        if chat["type"] == "oneway":
-            await message.reply_text("✅ پیام شما ارسال شد.")
-        return
-
-    await message.reply_text("⛔ چت ناشناس فعالی ندارید.")
-
-if __name__ == '__main__':
-   
-
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("end", end_chat))
-    app.add_handler(CallbackQueryHandler(handle_buttons))
-    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_any))
-
-    app.run_polling()
             await message.copy(chat_id=LOG_CHANNEL_ID)  # بدون ذخیره در chat_history
         except Exception as e:
             logger.error(f"خطا در لاگ‌گیری: {e}")
@@ -214,8 +190,6 @@ if __name__ == '__main__':
     await message.reply_text("⛔ چت ناشناس فعالی ندارید.")
 
 if __name__ == '__main__':
-   
-
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
