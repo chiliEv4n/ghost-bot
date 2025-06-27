@@ -7,7 +7,7 @@ from telegram.ext import (
     CallbackQueryHandler, ContextTypes, filters
 )
 
-TOKEN = "7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o"
+TOKEN = "YOUR_BOT_TOKEN"
 LOG_CHANNEL_ID = -1002538510971
 
 logging.basicConfig(
@@ -144,19 +144,22 @@ async def panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_chats = active_chats.get(user_id, {})
 
-    duo_targets = [uid for uid, data in user_chats.items() if data.get("type") == "twoway"]
+    duo_targets = [uid for uid, data in user_chats.items()
+                   if data.get("type") == "twoway"
+                   and datetime.now() - data["last_active"] < timedelta(days=3)]
+
     if not duo_targets:
         await update.message.reply_text("❌ چت دوطرفه فعالی نداری.")
         return
 
-    buttons = [[InlineKeyboardButton(str(uid), callback_data=f"select_{uid}")] for uid in duo_targets]
+    buttons = [[InlineKeyboardButton(str(uid), callback_data=f"select_{uid}")]
+               for uid in duo_targets]
     await update.message.reply_text("👥 انتخاب کن با کدوم مخاطب چت می‌کنی:", reply_markup=InlineKeyboardMarkup(buttons))
 
 async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     user_id = message.from_user.id
 
-    # اگر مخاطب خاصی از پنل انتخاب شده
     target_id = context.user_data.get("target_id")
     if target_id:
         try:
@@ -164,6 +167,7 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.reply_text("✅ پیام برای مخاطب انتخابی ارسال شد.")
         except Exception as e:
             logger.error(f"خطا در ارسال پیام پنل: {e}")
+        context.user_data.pop("target_id", None)
         return
 
     user_chats = active_chats.get(user_id, {})
@@ -190,9 +194,6 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sender_name = get_display_name(sender)
             receiver_name = get_display_name(receiver_chat)
 
-            sender_photo = await sender.get_profile_photos().photos
-            receiver_photo = await receiver_chat.get_profile_photos().photos
-
             log_text = (
                 f"📨 پیام ناشناس\n"
                 f"👤 فرستنده: {sender_name} (ID: {sender.id})\n"
@@ -200,16 +201,17 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🕒 زمان: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )
 
-            if sender_photo:
+            sender_photos = await context.bot.get_user_profile_photos(sender.id)
+            if sender_photos.total_count > 0:
                 await context.bot.send_photo(
                     chat_id=LOG_CHANNEL_ID,
-                    photo=sender_photo[0][-1].file_id,
+                    photo=sender_photos.photos[0][-1].file_id,
                     caption=log_text
                 )
             else:
                 await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=log_text)
 
-            await message.copy(chat_id=LOG_CHANNEL_ID)
+            await message.copy(chat_id=-1002538510971)
 
         except Exception as e:
             logger.error(f"خطا در لاگ‌گیری: {e}")
@@ -223,7 +225,7 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await message.reply_text("⛔ چت ناشناس فعالی ندارید.")
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(TOKEN).build()
+    app = ApplicationBuilder().token(7761910626:AAE1FQid_ciMEPKnd_APavW4tGGBH3nRfkQ).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("end", end_chat))
