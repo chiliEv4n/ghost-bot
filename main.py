@@ -225,7 +225,7 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await message.reply_text("⛔ چت ناشناس فعالی ندارید.")
 
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(7761910626:AAE1FQid_ciMEPKnd_APavW4tGGBH3nRfkQ).build()
+    app = ApplicationBuilder().token('7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o').build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("end", end_chat))
