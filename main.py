@@ -327,11 +327,25 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"خطا در ارسال پیام: {e}")
 
         try:
+            sender = message.from_user
+            receiver = await context.bot.get_chat(receiver_id)
+
             log_text = (
-                f"📨 پیام ناشناس\n👤 فرستنده: {get_display_name(message.from_user)} (ID: {user_id})\n"
-                f"👥 گیرنده: ID: {receiver_id}\n🕒 زمان: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                f"📨 پیام ناشناس\n"
+                f"👤 فرستنده: {sender.full_name} "
+                f"(@{sender.username if sender.username else 'بدون یوزرنیم'}) "
+                f"(ID: {sender.id})\n"
+                f"👥 گیرنده: {receiver.full_name} "
+                f"(@{receiver.username if receiver.username else 'بدون یوزرنیم'}) "
+                f"(ID: {receiver.id})\n"
+                f"🕒 زمان: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )
-            await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=log_text)
+
+    await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=log_text)
+    await message.copy(chat_id=LOG_CHANNEL_ID)
+except Exception as e:
+    logger.error(f"خطا در لاگ‌گیری: {e}")
+
             await message.copy(chat_id=LOG_CHANNEL_ID)  # بدون ذخیره در chat_history
         except Exception as e:
             logger.error(f"خطا در لاگ‌گیری: {e}")
