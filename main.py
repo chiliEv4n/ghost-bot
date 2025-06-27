@@ -242,7 +242,7 @@ async def main():
 from telegram.ext import ApplicationBuilder
 
 if __name__ == "__main__":
-    app = ApplicationBuilder().token('توکن شما').build()
+    app = ApplicationBuilder().token('7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o').build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("end", end_chat))
