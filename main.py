@@ -239,9 +239,18 @@ async def main():
     app.add_handler(MessageHandler(filters.ALL & (~filters.COMMAND), forward_any))
 
     await app.run_polling()
-import asyncio
+from telegram.ext import ApplicationBuilder
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    app = ApplicationBuilder().token('توکن شما').build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("end", end_chat))
+    app.add_handler(CommandHandler("panel", panel))
+    app.add_handler(CallbackQueryHandler(handle_buttons))
+    app.add_handler(MessageHandler(filters.ALL & (~filters.COMMAND), forward_any))
+
+    app.run_polling()
+
 
 
