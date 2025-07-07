@@ -8,8 +8,9 @@ from telegram.ext import (
 )
 
 # به جای استفاده از .env، مستقیماً مقداردهی می‌کنیم
-TOKEN = "7761910626:AAFT_eRxUjozvapaJxmTHkolMZANBfsI47o"
-LOG_CHANNEL_ID = -1002538510971  # عدد کانال لاگ
+TOKEN = os.getenv("BOT_TOKEN")
+LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", "-1001234567890"))
+
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
